@@ -1,10 +1,16 @@
-import { FC, useRef } from "react";
+import { Slider } from "@mui/material";
+import { ChangeEvent, FC, useEffect, useState } from "react";
 
-interface Pixel {
+export interface Pixel {
   r: number;
   g: number;
   b: number;
   a: number;
+}
+
+interface Img {
+  height: number;
+  width: number;
 }
 
 interface Props {
@@ -12,63 +18,117 @@ interface Props {
   onCanvasClick: (pixel: Pixel) => void;
 }
 
-const CANVAS_SIDE_SIZE = 400;
-
 export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
-  const canvas = useRef<HTMLCanvasElement>();
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const canvasHeight = canvas?.clientHeight;
+  const canvasWidth = canvas?.clientWidth;
+
+  // container
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const containerHeight = container?.clientHeight;
+  const containerWidth = container?.clientWidth;
+  //
+
+  const [imgParams, setImgParams] = useState<Img>();
+
+  const [scale, setScale] = useState<number>();
+
+  // on img load + set initial scale
+  useEffect(() => {
+    if (containerHeight && containerWidth) {
+      image.onload = () => {
+        const { height, width } = image;
+
+        setImgParams({ height, width });
+
+        const heightK = height / containerHeight;
+        const widthK = width / containerWidth;
+
+        const maxK = Math.max(heightK, widthK);
+
+        setScale(Math.min(300, Math.ceil((1 / maxK) * 100)));
+      };
+    }
+  }, [containerHeight, containerWidth, image]);
+
+  // draw img. Initial + when scale changed
+  useEffect(() => {
+    const allAsyncDataLoaded =
+      canvas !== null &&
+      canvasHeight !== undefined &&
+      canvasWidth !== undefined &&
+      imgParams !== undefined &&
+      scale !== undefined;
+
+    if (allAsyncDataLoaded) {
+      const context = canvas.getContext("2d");
+
+      if (context !== null) {
+        const { height: imageHeight, width: imageWidth } = imgParams;
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        const scaledImgWidth = imageWidth * (scale / 100);
+        const scaledImgHeight = imageHeight * (scale / 100);
+
+        context.drawImage(
+          image,
+          (canvasWidth - scaledImgWidth) / 2,
+          (canvasHeight - scaledImgHeight) / 2,
+          scaledImgWidth,
+          scaledImgHeight
+        );
+      }
+    }
+  }, [canvas, canvasHeight, canvasWidth, image, imgParams, scale]);
 
   return (
-    <canvas
-      style={{ border: "2px solid rgb(25, 118, 210)", borderRadius: "10px" }}
-      height={`${CANVAS_SIDE_SIZE}px`}
-      width={`${CANVAS_SIDE_SIZE}px`}
-      onClick={(e) => {
-        const eventCanvas = e.target as HTMLCanvasElement;
+    <div style={{ height: "100%", width: "100%" }} ref={setContainer}>
+      <div style={{ height: "30px" }}>
+        {scale && (
+          <Slider
+            onChange={(event) => {
+              const inputEvent =
+                event as unknown as ChangeEvent<HTMLInputElement>;
 
-        const rect = eventCanvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+              setScale(Number(inputEvent.target.value));
+            }}
+            value={scale}
+            min={12}
+            max={300}
+            valueLabelDisplay="on"
+            style={{ width: "300px" }}
+          />
+        )}
+      </div>
+      {containerHeight && containerWidth && (
+        <canvas
+          style={{
+            border: "2px solid rgb(25, 118, 210)",
+            borderRadius: "10px",
+          }}
+          height={containerHeight - 30}
+          width={containerWidth}
+          onClick={(event) => {
+            const eventCanvas = event.target as HTMLCanvasElement;
 
-        const ctx = eventCanvas.getContext("2d");
+            const rect = eventCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
 
-        if (ctx === null) return;
+            const ctx = eventCanvas.getContext("2d");
 
-        const pixelData = ctx.getImageData(x, y, 1, 1).data;
+            if (ctx === null) return;
 
-        const [r, g, b, a] = pixelData;
+            const pixelData = ctx.getImageData(x, y, 1, 1).data;
 
-        onCanvasClick({ r, g, b, a });
-      }}
-      ref={(canvasRef) => {
-        if (canvasRef !== null) {
-          const context = canvasRef.getContext("2d");
+            const [r, g, b, a] = pixelData;
 
-          image.onload = () => {
-            if (context !== null) {
-              const { height, width } = image;
-
-              if (height < CANVAS_SIDE_SIZE && width < CANVAS_SIDE_SIZE) {
-                context.drawImage(image, 0, 0);
-              }
-
-              const decreaseK =
-                height > width
-                  ? CANVAS_SIDE_SIZE / height
-                  : CANVAS_SIDE_SIZE / width;
-
-              context.drawImage(
-                image,
-                0,
-                0,
-                width * decreaseK,
-                height * decreaseK
-              );
-            }
-          };
-
-          canvas.current = canvasRef;
-        }
-      }}
-    ></canvas>
+            onCanvasClick({ r, g, b, a });
+          }}
+          ref={setCanvas}
+        ></canvas>
+      )}
+    </div>
   );
 };
