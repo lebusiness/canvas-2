@@ -1,5 +1,11 @@
 import { Slider } from "@mui/material";
 import { ChangeEvent, FC, useEffect, useState } from "react";
+import { ResizeOptionsButton } from "./ResizeOptionsButton/ResizeOptionsButton";
+
+const MAX_SCALE = 300;
+const MIN_SCALE = 12;
+
+const SCALE_BAR_HEIGHT = 30;
 
 export interface Pixel {
   r: number;
@@ -19,9 +25,11 @@ interface Props {
 }
 
 export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
+  // canvas
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const canvasHeight = canvas?.clientHeight;
   const canvasWidth = canvas?.clientWidth;
+  //
 
   // container
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
@@ -41,12 +49,13 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
 
         setImgParams({ height, width });
 
-        const heightK = height / containerHeight;
-        const widthK = width / containerWidth;
+        const BORDER_SIZE = 50;
+        const heightK = height / (containerHeight - BORDER_SIZE * 2);
+        const widthK = width / (containerWidth - BORDER_SIZE * 2);
 
         const maxK = Math.max(heightK, widthK);
 
-        setScale(Math.min(300, Math.ceil((1 / maxK) * 100)));
+        setScale(Math.min(MAX_SCALE, Math.ceil((1 / maxK) * 100)));
       };
     }
   }, [containerHeight, containerWidth, image]);
@@ -84,7 +93,22 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
 
   return (
     <div style={{ height: "100%", width: "100%" }} ref={setContainer}>
-      <div style={{ height: "30px" }}>
+      <div>
+        {imgParams && (
+          <ResizeOptionsButton
+            initialHeight={image.height}
+            initialWidth={image.width}
+            newHeight={imgParams?.height}
+            newWidth={imgParams?.width}
+            setImgParams={({ height, width }) => {
+              setImgParams((prev) => {
+                return { ...prev, height, width };
+              });
+            }}
+          />
+        )}
+      </div>
+      <div style={{ height: `${SCALE_BAR_HEIGHT}px` }}>
         {scale && (
           <Slider
             onChange={(event) => {
@@ -94,20 +118,21 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
               setScale(Number(inputEvent.target.value));
             }}
             value={scale}
-            min={12}
-            max={300}
+            min={MIN_SCALE}
+            max={MAX_SCALE}
             valueLabelDisplay="on"
             style={{ width: "300px" }}
           />
         )}
       </div>
+
       {containerHeight && containerWidth && (
         <canvas
           style={{
             border: "2px solid rgb(25, 118, 210)",
             borderRadius: "10px",
           }}
-          height={containerHeight - 30}
+          height={containerHeight - SCALE_BAR_HEIGHT}
           width={containerWidth}
           onClick={(event) => {
             const eventCanvas = event.target as HTMLCanvasElement;
