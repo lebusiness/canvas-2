@@ -95,12 +95,14 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
   return (
     <div style={{ height: "100%", width: "100%" }} ref={setContainer}>
       <div style={{ height: `${RESIZE_BUTTON_HEIGHT}px` }}>
-        {imgParams && (
+        {imgParams && canvasHeight && canvasWidth && (
           <ResizeOptionsButton
             initialHeight={image.height}
             initialWidth={image.width}
             newHeight={imgParams?.height}
             newWidth={imgParams?.width}
+            maxHeight={canvasHeight}
+            maxWidth={canvasWidth}
             setImgParams={({ height, width }) => {
               setImgParams((prev) => {
                 return { ...prev, height, width };

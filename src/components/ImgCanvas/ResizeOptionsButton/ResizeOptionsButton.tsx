@@ -30,6 +30,8 @@ interface Props {
   initialWidth: number;
   newHeight: number;
   newWidth: number;
+  maxHeight: number;
+  maxWidth: number;
   setImgParams: ({ height, width }: { height: number; width: number }) => void;
 }
 
@@ -38,6 +40,8 @@ export const ResizeOptionsButton: FC<Props> = ({
   initialWidth,
   newHeight,
   newWidth,
+  maxHeight,
+  maxWidth,
   setImgParams,
 }) => {
   const [open, setOpen] = useState(false);
@@ -203,10 +207,22 @@ export const ResizeOptionsButton: FC<Props> = ({
           <Button
             style={{ width: "100%" }}
             onClick={() => {
-              setImgParams({
-                width: changedImgWidth,
-                height: changedImgHeight,
-              });
+              const validWidth =
+                changedImgWidth > 0 && changedImgWidth < maxWidth;
+
+              const validHeight =
+                changedImgHeight > 0 && changedImgHeight < maxHeight;
+
+              console.log(maxHeight);
+
+              if (validWidth && validHeight) {
+                setImgParams({
+                  width: changedImgWidth,
+                  height: changedImgHeight,
+                });
+              } else {
+                alert("not corrent img size");
+              }
             }}
             variant={"contained"}
             type={"submit"}
