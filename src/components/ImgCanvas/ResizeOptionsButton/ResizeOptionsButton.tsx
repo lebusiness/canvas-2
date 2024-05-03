@@ -7,14 +7,14 @@ import {
   Modal,
   Select,
 } from "@mui/material";
-import { FC, useState } from "react";
+import { FC, useCallback, useState } from "react";
 
 const style = {
   position: "absolute" as "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
+  width: 500,
   bgcolor: "background.paper",
   border: "2px solid #000",
   boxShadow: 24,
@@ -40,7 +40,6 @@ export const ResizeOptionsButton: FC<Props> = ({
   newWidth,
   setImgParams,
 }) => {
-  // modal
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -48,17 +47,88 @@ export const ResizeOptionsButton: FC<Props> = ({
   // resizing
   const [measuringUnits, setMeasuringUnits] = useState<"px" | "percent">("px");
 
+  const [resizingAlghoritm, setResizingAlghoritm] =
+    useState<"nearestNeighbor">("nearestNeighbor");
+
   const [keepProportions, setKeepProportions] = useState(false);
 
   const [changedImgHeight, setChangedImgHeight] = useState(newHeight);
+
   const [changedImgWidth, setChangedImgWidth] = useState(newWidth);
 
-  //
+  const getSizeByMeasuringUnits = useCallback(
+    (side: "height" | "width") => {
+      if (side === "height") {
+        if (measuringUnits === "px") {
+          return changedImgHeight.toFixed(3);
+        } else {
+          return ((changedImgHeight / initialHeight) * 100).toFixed(3);
+        }
+      } else {
+        if (measuringUnits === "px") {
+          return changedImgWidth.toFixed(3);
+        } else {
+          return ((changedImgWidth / initialWidth) * 100).toFixed(3);
+        }
+      }
+    },
+    [
+      changedImgHeight,
+      changedImgWidth,
+      initialHeight,
+      initialWidth,
+      measuringUnits,
+    ]
+  );
+
+  const changeSideSizeByMeasuringUnits = useCallback(
+    (side: "height" | "width", sizeValue: number) => {
+      if (side === "height") {
+        if (measuringUnits === "px") {
+          if (keepProportions) {
+            setChangedImgWidth(initialWidth * (sizeValue / initialHeight));
+          }
+
+          setChangedImgHeight(sizeValue);
+        } else {
+          const heightPixelValue = (initialHeight * sizeValue) / 100;
+
+          if (keepProportions) {
+            setChangedImgWidth(
+              initialWidth * (heightPixelValue / initialHeight)
+            );
+          }
+
+          setChangedImgHeight(heightPixelValue);
+        }
+      } else {
+        if (measuringUnits === "px") {
+          if (keepProportions) {
+            setChangedImgHeight(initialHeight * (sizeValue / initialWidth));
+          }
+
+          setChangedImgWidth(sizeValue);
+        } else {
+          const widthPixelValue = (initialWidth * sizeValue) / 100;
+
+          if (keepProportions) {
+            setChangedImgHeight(
+              initialHeight * (widthPixelValue / initialWidth)
+            );
+          }
+
+          setChangedImgWidth((initialWidth * sizeValue) / 100);
+        }
+      }
+    },
+    [initialHeight, initialWidth, keepProportions, measuringUnits]
+  );
 
   //
+
   return (
     <div>
-      <Button onClick={handleOpen}>Open modal</Button>
+      <Button onClick={handleOpen}>Change size</Button>
       <Modal
         open={open}
         onClose={handleClose}
@@ -66,23 +136,33 @@ export const ResizeOptionsButton: FC<Props> = ({
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <div>
-            Initial(HxW): {initialHeight}x{initialWidth}
-          </div>
-          <div>
-            New(HxW): {newHeight}x{newWidth}
-          </div>
+          <div>Initial(H*W): {initialHeight * initialWidth}</div>
+          <div>New(H*W): {newHeight * newWidth}</div>
 
           <Box display={"flex"} gap={1} alignItems={"center"}>
             Units of calculation
             <Select
               value={measuringUnits}
               onChange={(event) => {
-                setMeasuringUnits(event.target.value as "px" | "percent");
+                const measuringUnit = event.target.value as "px" | "percent";
+
+                setMeasuringUnits(measuringUnit);
               }}
             >
               <MenuItem value={"px"}>px</MenuItem>
               <MenuItem value={"percent"}>percent</MenuItem>
+            </Select>
+          </Box>
+
+          <Box display={"flex"} gap={1} alignItems={"center"}>
+            Resizing alghoritm
+            <Select
+              value={resizingAlghoritm}
+              onChange={(event) => {
+                setResizingAlghoritm(event.target.value as "nearestNeighbor");
+              }}
+            >
+              <MenuItem value={"nearestNeighbor"}>nearest neighbor</MenuItem>
             </Select>
           </Box>
 
@@ -96,29 +176,27 @@ export const ResizeOptionsButton: FC<Props> = ({
             />
           </Box>
 
-          <Box display={"flex"} gap={1} alignItems={"center"}>
+          <Box display={"flex"} gap={1} flexDirection={"column"}>
             <Box display={"flex"} gap={1} alignItems={"center"}>
               height:
               <Input
-                value={changedImgHeight}
+                value={getSizeByMeasuringUnits("height")}
                 onChange={(event) => {
-                  setChangedImgHeight(+event.target.value);
+                  changeSideSizeByMeasuringUnits("height", +event.target.value);
                 }}
-                style={{ width: 80 }}
+                style={{ flex: 1 }}
                 type="number"
-                //  inputProps={{ max: 50, min: 0 }}
               />
             </Box>
             <Box display={"flex"} gap={1} alignItems={"center"}>
               width:
               <Input
-                value={changedImgWidth}
+                value={getSizeByMeasuringUnits("width")}
                 onChange={(event) => {
-                  setChangedImgWidth(+event.target.value);
+                  changeSideSizeByMeasuringUnits("width", +event.target.value);
                 }}
-                style={{ width: 80 }}
+                style={{ flex: 1 }}
                 type="number"
-                //  inputProps={{ max: 50, min: 0 }}
               />
             </Box>
           </Box>

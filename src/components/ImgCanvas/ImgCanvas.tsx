@@ -6,6 +6,7 @@ const MAX_SCALE = 300;
 const MIN_SCALE = 12;
 
 const SCALE_BAR_HEIGHT = 30;
+const RESIZE_BUTTON_HEIGHT = 36;
 
 export interface Pixel {
   r: number;
@@ -93,7 +94,7 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
 
   return (
     <div style={{ height: "100%", width: "100%" }} ref={setContainer}>
-      <div>
+      <div style={{ height: `${RESIZE_BUTTON_HEIGHT}px` }}>
         {imgParams && (
           <ResizeOptionsButton
             initialHeight={image.height}
@@ -132,7 +133,7 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
             border: "2px solid rgb(25, 118, 210)",
             borderRadius: "10px",
           }}
-          height={containerHeight - SCALE_BAR_HEIGHT}
+          height={containerHeight - SCALE_BAR_HEIGHT - RESIZE_BUTTON_HEIGHT}
           width={containerWidth}
           onClick={(event) => {
             const eventCanvas = event.target as HTMLCanvasElement;
