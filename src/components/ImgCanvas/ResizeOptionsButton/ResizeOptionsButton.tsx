@@ -22,8 +22,9 @@ const style = {
   display: "flex",
   flexDirection: "column",
   gap: "12px",
-  //   alignItems: "center",
 };
+
+export type ResizingAlgorithm = "nearestNeighbor";
 
 interface Props {
   initialHeight: number;
@@ -33,6 +34,7 @@ interface Props {
   maxHeight: number;
   maxWidth: number;
   setImgParams: ({ height, width }: { height: number; width: number }) => void;
+  setResizingAlgorithm: (algorithm: ResizingAlgorithm) => void;
 }
 
 export const ResizeOptionsButton: FC<Props> = ({
@@ -43,16 +45,16 @@ export const ResizeOptionsButton: FC<Props> = ({
   maxHeight,
   maxWidth,
   setImgParams,
+  setResizingAlgorithm,
 }) => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  // resizing
   const [measuringUnits, setMeasuringUnits] = useState<"px" | "percent">("px");
 
-  const [resizingAlghoritm, setResizingAlghoritm] =
-    useState<"nearestNeighbor">("nearestNeighbor");
+  const [newResizingAlgorithm, setNewResizingAlgorithm] =
+    useState<ResizingAlgorithm>("nearestNeighbor");
 
   const [keepProportions, setKeepProportions] = useState(false);
 
@@ -128,8 +130,6 @@ export const ResizeOptionsButton: FC<Props> = ({
     [initialHeight, initialWidth, keepProportions, measuringUnits]
   );
 
-  //
-
   return (
     <div>
       <Button onClick={handleOpen}>Change size</Button>
@@ -161,9 +161,11 @@ export const ResizeOptionsButton: FC<Props> = ({
           <Box display={"flex"} gap={1} alignItems={"center"}>
             Resizing alghoritm
             <Select
-              value={resizingAlghoritm}
+              value={newResizingAlgorithm}
               onChange={(event) => {
-                setResizingAlghoritm(event.target.value as "nearestNeighbor");
+                setNewResizingAlgorithm(
+                  event.target.value as ResizingAlgorithm
+                );
               }}
             >
               <MenuItem value={"nearestNeighbor"}>nearest neighbor</MenuItem>
@@ -220,6 +222,7 @@ export const ResizeOptionsButton: FC<Props> = ({
                   width: changedImgWidth,
                   height: changedImgHeight,
                 });
+                setResizingAlgorithm(newResizingAlgorithm);
               } else {
                 alert("not corrent img size");
               }

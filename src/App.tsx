@@ -57,7 +57,7 @@ function App() {
           </div>
           <div style={{ height: "120px", padding: "20px" }}>
             <div>
-              natutal size(HxW): {image.height}x{image.width}
+              natural size(HxW): {image.height}x{image.width}
             </div>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "8px" }}

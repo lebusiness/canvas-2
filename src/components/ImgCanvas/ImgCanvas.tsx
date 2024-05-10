@@ -1,6 +1,9 @@
 import { Slider } from "@mui/material";
 import { ChangeEvent, FC, useEffect, useState } from "react";
-import { ResizeOptionsButton } from "./ResizeOptionsButton/ResizeOptionsButton";
+import {
+  ResizeOptionsButton,
+  ResizingAlgorithm,
+} from "./ResizeOptionsButton/ResizeOptionsButton";
 
 const MAX_SCALE = 300;
 const MIN_SCALE = 12;
@@ -61,6 +64,9 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
     }
   }, [containerHeight, containerWidth, image]);
 
+  const [resizingAlghorithm, setResizingAlghorithm] =
+    useState<ResizingAlgorithm>("nearestNeighbor");
+
   // draw img. Initial + when scale changed
   useEffect(() => {
     const allAsyncDataLoaded =
@@ -74,20 +80,25 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
       const context = canvas.getContext("2d");
 
       if (context !== null) {
+        context.save(); // запомнить состояние без масштабирования
+
         const { height: imageHeight, width: imageWidth } = imgParams;
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
-        const scaledImgWidth = imageWidth * (scale / 100);
-        const scaledImgHeight = imageHeight * (scale / 100);
+        const scaleK = scale / 100;
 
-        context.drawImage(
-          image,
-          (canvasWidth - scaledImgWidth) / 2,
-          (canvasHeight - scaledImgHeight) / 2,
-          scaledImgWidth,
-          scaledImgHeight
-        );
+        context.scale(scaleK, scaleK);
+
+        if (true) {
+          context.drawImage(image, 0, 0, imageWidth, imageHeight);
+        } else {
+          // get resizingAlghoritm
+          // get changed imageHeight, imageWidth
+          // get constant img pixel array, use alghoritm
+        }
+
+        context.restore(); // восстановить состояние без масшабирования
       }
     }
   }, [canvas, canvasHeight, canvasWidth, image, imgParams, scale]);
@@ -108,6 +119,7 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
                 return { ...prev, height, width };
               });
             }}
+            setResizingAlgorithm={setResizingAlghorithm}
           />
         )}
       </div>
