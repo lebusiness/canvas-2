@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import "./App.css";
 import { UploadFileInput } from "./components/UploadFileInput/UploadFileInput";
 import { ImgCanvas, Pixel } from "./components/ImgCanvas/ImgCanvas";
 import { UrlFileInput } from "./components/UrlFileInput/UrlFileInput";
 
-function isUndefined(value: any): value is undefined {
+function isUndefined(value: unknown): value is undefined {
   return value === undefined;
 }
 
@@ -13,28 +13,19 @@ function App() {
   const [imgSrc, setImg] = useState<string>();
   const [rgb, setRgb] = useState<Pixel>();
 
-  const [, rerender] = useState<null>();
+  const [, rerender] = useState<object>();
 
+  // every new src, new instance
   const image = useMemo(() => {
     const img = new Image();
+
+    img.addEventListener("load", () => rerender({}));
 
     img.src = imgSrc ?? "";
     img.crossOrigin = "Anonymous";
 
     return img;
   }, [imgSrc]);
-
-  useEffect(() => {
-    const rerenderCb = () => {
-      rerender(null);
-    };
-
-    image.addEventListener("load", rerenderCb);
-
-    return () => {
-      image.removeEventListener("load", rerenderCb);
-    };
-  }, [image]);
 
   return (
     <div className="App">
