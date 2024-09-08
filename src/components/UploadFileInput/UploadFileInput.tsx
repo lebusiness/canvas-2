@@ -2,7 +2,7 @@ import { Input } from "@mui/material";
 import { ChangeEvent, FC } from "react";
 
 interface Props {
-  setImg: (img: any) => void;
+  setImg: (img: string) => void;
 }
 
 export const UploadFileInput: FC<Props> = ({ setImg }) => {

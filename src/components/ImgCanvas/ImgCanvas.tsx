@@ -4,6 +4,7 @@ import {
   ResizeOptionsButton,
   ResizingAlgorithm,
 } from "./ResizeOptionsButton/ResizeOptionsButton";
+import { getResizedNearestNeighborWayImageData } from "./alghorithms";
 
 const MAX_SCALE = 300;
 const MIN_SCALE = 12;
@@ -18,7 +19,7 @@ export interface Pixel {
   a: number;
 }
 
-interface Img {
+interface EasyImg {
   height: number;
   width: number;
 }
@@ -33,6 +34,7 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const canvasHeight = canvas?.clientHeight;
   const canvasWidth = canvas?.clientWidth;
+  const [initialImageData, setInitialImageData] = useState<ImageData>();
   //
 
   // container
@@ -41,7 +43,7 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
   const containerWidth = container?.clientWidth;
   //
 
-  const [imgParams, setImgParams] = useState<Img>();
+  const [imgParams, setImgParams] = useState<EasyImg>();
 
   const [scale, setScale] = useState<number>();
 
@@ -60,48 +62,85 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
         const maxK = Math.max(heightK, widthK);
 
         setScale(Math.min(MAX_SCALE, Math.ceil((1 / maxK) * 100)));
+
+        // получить initialImageData
+        const tempCanvas = document.createElement("canvas");
+        const tempCtx = tempCanvas.getContext("2d");
+
+        const { height: imageHeight, width: imageWidth } = image;
+
+        tempCanvas.width = imageWidth;
+        tempCanvas.height = imageHeight;
+
+        if (tempCtx) {
+          tempCtx.drawImage(image, 0, 0, imageWidth, imageHeight);
+
+          setInitialImageData(
+            tempCtx.getImageData(0, 0, imageWidth, imageHeight)
+          );
+        }
+        //
       };
     }
   }, [containerHeight, containerWidth, image]);
 
+  // eslint-disable-next-line
   const [resizingAlghorithm, setResizingAlghorithm] =
     useState<ResizingAlgorithm>("nearestNeighbor");
 
-  // draw img. Initial + when scale changed
+  // draw img. Initial + when scale changed + when sizes chaged
   useEffect(() => {
     const allAsyncDataLoaded =
       canvas !== null &&
       canvasHeight !== undefined &&
       canvasWidth !== undefined &&
       imgParams !== undefined &&
-      scale !== undefined;
+      scale !== undefined &&
+      initialImageData !== undefined;
 
     if (allAsyncDataLoaded) {
+      const { height: imageHeight, width: imageWidth } = imgParams;
+
       const context = canvas.getContext("2d");
 
-      if (context !== null) {
+      if (context) {
         context.save(); // запомнить состояние без масштабирования
-
-        const { height: imageHeight, width: imageWidth } = imgParams;
-
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         const scaleK = scale / 100;
-
         context.scale(scaleK, scaleK);
 
-        if (true) {
-          context.drawImage(image, 0, 0, imageWidth, imageHeight);
-        } else {
-          // get resizingAlghoritm
-          // get changed imageHeight, imageWidth
-          // get constant img pixel array, use alghoritm
-        }
+        // сохранение новой матрицы в временный канвас
+        const tempCanvas = document.createElement("canvas");
+        const tempContext = tempCanvas.getContext("2d");
+        tempCanvas.width = imageWidth;
+        tempCanvas.height = imageHeight;
 
-        context.restore(); // восстановить состояние без масшабирования
+        tempContext?.putImageData(
+          getResizedNearestNeighborWayImageData(
+            initialImageData,
+            imageWidth,
+            imageHeight
+          ),
+          0,
+          0
+        );
+        // --
+
+        context.drawImage(tempCanvas, 0, 0);
+
+        context.restore(); // восстановить состояние без масштабирования
       }
     }
-  }, [canvas, canvasHeight, canvasWidth, image, imgParams, scale]);
+  }, [
+    canvas,
+    canvasHeight,
+    canvasWidth,
+    image,
+    imgParams,
+    initialImageData,
+    scale,
+  ]);
 
   return (
     <div style={{ height: "100%", width: "100%" }} ref={setContainer}>
@@ -110,8 +149,8 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
           <ResizeOptionsButton
             initialHeight={image.height}
             initialWidth={image.width}
-            newHeight={imgParams?.height}
-            newWidth={imgParams?.width}
+            newHeight={imgParams.height}
+            newWidth={imgParams.width}
             maxHeight={canvasHeight}
             maxWidth={canvasWidth}
             setImgParams={({ height, width }) => {

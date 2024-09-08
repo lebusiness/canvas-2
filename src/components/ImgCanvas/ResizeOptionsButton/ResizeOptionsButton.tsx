@@ -6,11 +6,12 @@ import {
   MenuItem,
   Modal,
   Select,
+  Tooltip,
 } from "@mui/material";
 import { FC, useCallback, useState } from "react";
 
 const style = {
-  position: "absolute" as "absolute",
+  position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
@@ -24,7 +25,7 @@ const style = {
   gap: "12px",
 };
 
-export type ResizingAlgorithm = "nearestNeighbor";
+export type ResizingAlgorithm = "nearestNeighbor" | "bilinear";
 
 interface Props {
   initialHeight: number;
@@ -133,12 +134,7 @@ export const ResizeOptionsButton: FC<Props> = ({
   return (
     <div>
       <Button onClick={handleOpen}>Change size</Button>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
+      <Modal open={open} onClose={handleClose}>
         <Box sx={style}>
           <div>Initial(H*W): {initialHeight * initialWidth}</div>
           <div>New(H*W): {newHeight * newWidth}</div>
@@ -160,15 +156,37 @@ export const ResizeOptionsButton: FC<Props> = ({
 
           <Box display={"flex"} gap={1} alignItems={"center"}>
             Resizing alghoritm
-            <Select
+            <Select<ResizingAlgorithm>
               value={newResizingAlgorithm}
               onChange={(event) => {
-                setNewResizingAlgorithm(
-                  event.target.value as ResizingAlgorithm
-                );
+                const value = event.target.value as ResizingAlgorithm;
+                if (value === "nearestNeighbor") {
+                  setNewResizingAlgorithm(
+                    event.target.value as ResizingAlgorithm
+                  );
+                }
               }}
             >
-              <MenuItem value={"nearestNeighbor"}>nearest neighbor</MenuItem>
+              <MenuItem value={"nearestNeighbor"}>
+                <Box display={"flex"} gap={0.5}>
+                  nearest neighborbilinear
+                  <Tooltip
+                    title={`Интерполяция по ближайшему соседу - чтобы определить значение тона пикселя масшабированного изображения необходимо найти ближайший к нему пиксель исходного изображения и задать уровень его тона.`}
+                  >
+                    <div>?</div>
+                  </Tooltip>
+                </Box>
+              </MenuItem>
+              <MenuItem value={"bilinear"}>
+                <Box display={"flex"} gap={0.5}>
+                  bilinear (soon)
+                  <Tooltip
+                    title={`Билинейная интерполяция присваивает среднее значение четырех соседних пикселей исходного изображения пикселю масштабированного`}
+                  >
+                    <div>?</div>
+                  </Tooltip>
+                </Box>
+              </MenuItem>
             </Select>
           </Box>
 

@@ -2,7 +2,7 @@ import { Button, Input } from "@mui/material";
 import { FC, useRef } from "react";
 
 interface Props {
-  setImg: (img: any) => void;
+  setImg: (img: string) => void;
 }
 
 export const UrlFileInput: FC<Props> = ({ setImg }) => {
@@ -27,7 +27,7 @@ export const UrlFileInput: FC<Props> = ({ setImg }) => {
         <Button
           variant={"contained"}
           onClick={() => {
-            setImg(value.current?.value);
+            setImg(value.current?.value ?? "");
           }}
         >
           Set img
