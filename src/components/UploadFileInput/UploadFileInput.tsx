@@ -25,6 +25,9 @@ export const UploadFileInput: FC<Props> = ({ setImg }) => {
         id="file"
         name="file"
         type="file"
+        inputProps={{
+          accept: "image/*",
+        }}
         title=" "
         style={{ width: "220px" }}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {

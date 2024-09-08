@@ -108,7 +108,7 @@ export const ResizeOptionsButton: FC<Props> = ({
 
           setChangedImgHeight(heightPixelValue);
         }
-      } else {
+      } else if (side === "width") {
         if (measuringUnits === "px") {
           if (keepProportions) {
             setChangedImgHeight(initialHeight * (sizeValue / initialWidth));
@@ -136,8 +136,8 @@ export const ResizeOptionsButton: FC<Props> = ({
       <Button onClick={handleOpen}>Change size</Button>
       <Modal open={open} onClose={handleClose}>
         <Box sx={style}>
-          <div>Initial(H*W): {initialHeight * initialWidth}</div>
-          <div>New(H*W): {newHeight * newWidth}</div>
+          <div>Initial(H*W): {Math.round(initialHeight * initialWidth)}</div>
+          <div>New(H*W): {Math.round(newHeight * newWidth)}</div>
 
           <Box display={"flex"} gap={1} alignItems={"center"}>
             Units of calculation
@@ -233,13 +233,12 @@ export const ResizeOptionsButton: FC<Props> = ({
               const validHeight =
                 changedImgHeight > 0 && changedImgHeight < maxHeight;
 
-              console.log(maxHeight);
-
               if (validWidth && validHeight) {
                 setImgParams({
-                  width: changedImgWidth,
-                  height: changedImgHeight,
+                  width: Math.round(changedImgWidth),
+                  height: Math.round(changedImgHeight),
                 });
+
                 setResizingAlgorithm(newResizingAlgorithm);
               } else {
                 alert("not corrent img size");

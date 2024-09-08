@@ -79,7 +79,7 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
             tempCtx.getImageData(0, 0, imageWidth, imageHeight)
           );
         }
-        //
+        // --
       };
     }
   }, [containerHeight, containerWidth, image]);
@@ -110,6 +110,9 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
         const scaleK = scale / 100;
         context.scale(scaleK, scaleK);
 
+        const centeredX = (canvas.width / scaleK - imageWidth) / 2;
+        const centeredY = (canvas.height / scaleK - imageHeight) / 2;
+
         // сохранение новой матрицы в временный канвас
         const tempCanvas = document.createElement("canvas");
         const tempContext = tempCanvas.getContext("2d");
@@ -127,7 +130,7 @@ export const ImgCanvas: FC<Props> = ({ image, onCanvasClick }) => {
         );
         // --
 
-        context.drawImage(tempCanvas, 0, 0);
+        context.drawImage(tempCanvas, centeredX, centeredY);
 
         context.restore(); // восстановить состояние без масштабирования
       }
